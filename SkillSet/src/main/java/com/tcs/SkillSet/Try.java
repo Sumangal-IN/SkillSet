@@ -25,250 +25,274 @@ public class Try {
 			+ "/dyn/admin/nucleus//atg/registry/ContentRepositories/ProductCatalog/";
 	private static final String URL_AGENT_LOGIN = ATG_HOST
 			+ "/agent-front/jsp/agent/login.jsp?_DARGS=/agent-front/jsp/agent/login.jsp";
+	private static final String agentAccountNumber = "52910049";
 
-	public static String cancelOrder(String sapOrderId) throws ClientProtocolException, IOException {
+	public static String cancelOrder(String sapOrderId) {
+		try {
+			CookieHandler.setDefault(new CookieManager());
+			CloseableHttpClient instance = HttpClients.createDefault();
 
-		CookieHandler.setDefault(new CookieManager());
-		CloseableHttpClient instance = HttpClients.createDefault();
-
-		List<String> orderProperties = getPropertyData(
-				"<query-items item-descriptor=\"order\">sapOrderId=\"" + sapOrderId + "\"</query-items>",
-				URL_ORDER_REPOSITORY);
-		String omsOrderId = getProperty(orderProperties, "omsOrderId");
-		System.out.println("OrderID:" + omsOrderId);
-		String commerceItems[] = getProperty(orderProperties, "commerceItems").split(",");
-		System.out.println("commerceItems:" + getProperty(orderProperties, "commerceItems"));
-		HttpPost httpPost = new HttpPost(URL_AGENT_LOGIN);
-
-		List<NameValuePair> map = new ArrayList<NameValuePair>();
-		map.add(new BasicNameValuePair("_dyncharset", "UTF-8"));
-		map.add(new BasicNameValuePair("_dynSessConf", "4943013688166579489"));
-		map.add(new BasicNameValuePair("/kf/csc/navigation/formhandler/AgentLoginFormHandler.loginSuccessURL",
-				"main.jsp?"));
-		map.add(new BasicNameValuePair("_D:/kf/csc/navigation/formhandler/AgentLoginFormHandler.loginSuccessURL", " "));
-		map.add(new BasicNameValuePair("user", "service"));
-		map.add(new BasicNameValuePair("_D:user", " "));
-		map.add(new BasicNameValuePair("pwd", "Service123"));
-		map.add(new BasicNameValuePair("_D:pwd", " "));
-		map.add(new BasicNameValuePair(
-				"/kf/csc/navigation/formhandler/AgentLoginFormHandler.agentContext.sapCrmCustomerNo", ""));
-		map.add(new BasicNameValuePair(
-				"_D:/kf/csc/navigation/formhandler/AgentLoginFormHandler.agentContext.sapCrmCustomerNo", " "));
-		map.add(new BasicNameValuePair(
-				"/kf/csc/navigation/formhandler/AgentLoginFormHandler.agentContext.sapCrmOrderNo", ""));
-		map.add(new BasicNameValuePair(
-				"_D:/kf/csc/navigation/formhandler/AgentLoginFormHandler.agentContext.sapCrmOrderNo", " "));
-		map.add(new BasicNameValuePair("/kf/csc/navigation/formhandler/AgentLoginFormHandler.agentContext.sapCrmAction",
-				""));
-		map.add(new BasicNameValuePair(
-				"_D:/kf/csc/navigation/formhandler/AgentLoginFormHandler.agentContext.sapCrmAction", " "));
-		map.add(new BasicNameValuePair("/kf/csc/navigation/formhandler/AgentLoginFormHandler.agentContext.sapCrm", ""));
-		map.add(new BasicNameValuePair("_D:/kf/csc/navigation/formhandler/AgentLoginFormHandler.agentContext.sapCrm",
-				" "));
-		map.add(new BasicNameValuePair("/kf/csc/navigation/formhandler/AgentLoginFormHandler.agentContext.jsLocation",
-				""));
-		map.add(new BasicNameValuePair(
-				"_D:/kf/csc/navigation/formhandler/AgentLoginFormHandler.agentContext.jsLocation", " "));
-		map.add(new BasicNameValuePair("/kf/csc/navigation/formhandler/AgentLoginFormHandler.login", "Sign in"));
-		map.add(new BasicNameValuePair("_D:/kf/csc/navigation/formhandler/AgentLoginFormHandler.login", " "));
-		map.add(new BasicNameValuePair("_DARGS", "/agent-front/jsp/agent/login.jsp"));
-		httpPost.setEntity(new UrlEncodedFormEntity(map, "utf-8"));
-		CloseableHttpResponse response = instance.execute(httpPost);
-		String location = response.getFirstHeader("Location").getValue();
-		System.out.println(location);
-		response.close();
-
-		/********************************************************/
-		System.out.println("/********************************************************/");
-		/********************************************************/
-
-		httpPost = new HttpPost(location);
-		httpPost = setHeaders(httpPost);
-		response = instance.execute(httpPost);
-		location = response.getFirstHeader("Location").getValue();
-		System.out.println(location);
-		response.close();
-
-		/********************************************************/
-		System.out.println("/********************************************************/");
-		/********************************************************/
-
-		httpPost = new HttpPost(location);
-		httpPost = setHeaders(httpPost);
-		response = instance.execute(httpPost);
-		response.close();
-
-		/********************************************************/
-		System.out.println("/********************************************************/");
-		/********************************************************/
-
-		location = ATG_HOST + "/agent-front/jsp/store/searchStoreResults.jsp";
-		System.out.println(location);
-		httpPost = new HttpPost(location);
-		httpPost = setHeaders(httpPost);
-		response = instance.execute(httpPost);
-		map.clear();
-		map.add(new BasicNameValuePair("location", "0505"));
-		httpPost.setEntity(new UrlEncodedFormEntity(map, "utf-8"));
-		response = instance.execute(httpPost);
-		response.close();
-
-		// /********************************************************/
-		// System.out.println("/********************************************************/");
-		// /********************************************************/
-		//
-		// httpPost = new HttpPost(location);
-		// httpPost = setHeaders(httpPost);
-		// map.clear();
-		// map.add(new BasicNameValuePair("location", "0505"));
-		// httpPost.setEntity(new UrlEncodedFormEntity(map, "utf-8"));
-		// response = instance.execute(httpPost);
-		// location =
-		// "http://lnxs0506.uk.b-and-q.com:8030/agent-front/jsp/agent/main.jsp?";
-		// System.out.println(location);
-		// response.close();
-
-		/********************************************************/
-		System.out.println("/********************************************************/");
-		/********************************************************/
-
-		location = ATG_HOST + "/agent-front/jsp/agent/main.jsp?";
-		System.out.println(location);
-		httpPost = new HttpPost(location);
-		httpPost = setHeaders(httpPost);
-		response = instance.execute(httpPost);
-		response.close();
-
-		/********************************************************/
-		System.out.println("/********************************************************/");
-		/********************************************************/
-
-		location = ATG_HOST + "/agent-front/jsp/customer/order.jsp?orderId=" + omsOrderId;
-		System.out.println(location);
-		httpPost = new HttpPost(location);
-		httpPost = setHeaders(httpPost);
-		map.clear();
-		map.add(new BasicNameValuePair("orderNumber", sapOrderId));
-		httpPost.setEntity(new UrlEncodedFormEntity(map, "utf-8"));
-		response = instance.execute(httpPost);
-		System.out.println(EntityUtils.toString(response.getEntity()).contains("5014869104125"));
-		response.close();
-
-		/********************************************************/
-		System.out.println("/********************************************************/");
-		/********************************************************/
-
-		location = ATG_HOST + "/agent-front/jsp/orderAmend/cloneOrderJSON.jsp";
-		System.out.println(location);
-		httpPost = new HttpPost(location);
-		httpPost = setHeaders(httpPost);
-		map.clear();
-		map.add(new BasicNameValuePair("orderId", omsOrderId));
-		map.add(new BasicNameValuePair("action", ""));
-		httpPost.setEntity(new UrlEncodedFormEntity(map, "utf-8"));
-		response = instance.execute(httpPost);
-		if (EntityUtils.toString(response.getEntity()).contains("INVALID_ORDER_IN_SAP")) {
-			response.close();
-			return "order is not processed in SAP yet";
-		}
-		response.close();
-
-		/********************************************************/
-		System.out.println("/********************************************************/");
-		/********************************************************/
-
-		location = ATG_HOST + "/agent-front/jsp/orderAmend/orderAmend.jsp";
-		System.out.println(location);
-		httpPost = new HttpPost(location);
-		httpPost = setHeaders(httpPost);
-		map.clear();
-		map.add(new BasicNameValuePair("orderId", omsOrderId));
-		map.add(new BasicNameValuePair("action", ""));
-		httpPost.setEntity(new UrlEncodedFormEntity(map, "utf-8"));
-		response = instance.execute(httpPost);
-		System.out.println(EntityUtils.toString(response.getEntity()).contains("5014869104125"));
-		response.close();
-
-		/********************************************************/
-		System.out.println("/********************************************************/");
-		/********************************************************/
-
-		for (int i = 0; i < commerceItems.length; i++) {
-			List<String> commerceItemsProperties = getPropertyData(
-					"<print-item item-descriptor=\"commerceItem\" id=\"" + commerceItems[i] + "\"/>",
+			List<String> orderProperties = getPropertyData(
+					"<query-items item-descriptor=\"order\">sapOrderId=\"" + sapOrderId + "\"</query-items>",
 					URL_ORDER_REPOSITORY);
-			String productId = getProperty(commerceItemsProperties, "productId");
-			System.out.println(productId);
-			String commerceItemState = getProperty(commerceItemsProperties, "state");
-			System.out.println(commerceItemState);
-			if (commerceItemState.equals("CANCELLED")) {
-				continue;
-			}
-			String shippingMethod = getProperty(commerceItemsProperties, "shippingMethod");
-			System.out.println(shippingMethod);
-			if (!shippingMethod.equals("homeDelivery")) {
-				continue;
-			}
-			List<String> skuProperties = getPropertyData(
-					"<print-item item-descriptor=\"sku\" id=\"" + productId + "\"/>", URL_PRODUCT_CATALOG);
-			String productName = getProperty(skuProperties, "displayName").replaceAll("&amp;", "&");
-			System.out.println(productName);
-			String ean = getProperty(skuProperties, "ean");
-			System.out.println(ean);
+			String omsOrderId = getProperty(orderProperties, "omsOrderId");
+			System.out.println("OrderID:" + omsOrderId);
+			String commerceItems[] = getProperty(orderProperties, "commerceItems").split(",");
+			System.out.println("commerceItems:" + getProperty(orderProperties, "commerceItems"));
+			HttpPost httpPost = new HttpPost(URL_AGENT_LOGIN);
 
-			location = ATG_HOST + "/agent-front/jsp/orderAmend/amendOrderJSON.jsp";
+			List<NameValuePair> map = new ArrayList<NameValuePair>();
+			map.add(new BasicNameValuePair("_dyncharset", "UTF-8"));
+			map.add(new BasicNameValuePair("_dynSessConf", "4943013688166579489"));
+			map.add(new BasicNameValuePair("/kf/csc/navigation/formhandler/AgentLoginFormHandler.loginSuccessURL",
+					"main.jsp?"));
+			map.add(new BasicNameValuePair("_D:/kf/csc/navigation/formhandler/AgentLoginFormHandler.loginSuccessURL",
+					" "));
+			map.add(new BasicNameValuePair("user", "service"));
+			map.add(new BasicNameValuePair("_D:user", " "));
+			map.add(new BasicNameValuePair("pwd", "Service123"));
+			map.add(new BasicNameValuePair("_D:pwd", " "));
+			map.add(new BasicNameValuePair(
+					"/kf/csc/navigation/formhandler/AgentLoginFormHandler.agentContext.sapCrmCustomerNo", ""));
+			map.add(new BasicNameValuePair(
+					"_D:/kf/csc/navigation/formhandler/AgentLoginFormHandler.agentContext.sapCrmCustomerNo", " "));
+			map.add(new BasicNameValuePair(
+					"/kf/csc/navigation/formhandler/AgentLoginFormHandler.agentContext.sapCrmOrderNo", ""));
+			map.add(new BasicNameValuePair(
+					"_D:/kf/csc/navigation/formhandler/AgentLoginFormHandler.agentContext.sapCrmOrderNo", " "));
+			map.add(new BasicNameValuePair(
+					"/kf/csc/navigation/formhandler/AgentLoginFormHandler.agentContext.sapCrmAction", ""));
+			map.add(new BasicNameValuePair(
+					"_D:/kf/csc/navigation/formhandler/AgentLoginFormHandler.agentContext.sapCrmAction", " "));
+			map.add(new BasicNameValuePair("/kf/csc/navigation/formhandler/AgentLoginFormHandler.agentContext.sapCrm",
+					""));
+			map.add(new BasicNameValuePair(
+					"_D:/kf/csc/navigation/formhandler/AgentLoginFormHandler.agentContext.sapCrm", " "));
+			map.add(new BasicNameValuePair(
+					"/kf/csc/navigation/formhandler/AgentLoginFormHandler.agentContext.jsLocation", ""));
+			map.add(new BasicNameValuePair(
+					"_D:/kf/csc/navigation/formhandler/AgentLoginFormHandler.agentContext.jsLocation", " "));
+			map.add(new BasicNameValuePair("/kf/csc/navigation/formhandler/AgentLoginFormHandler.login", "Sign in"));
+			map.add(new BasicNameValuePair("_D:/kf/csc/navigation/formhandler/AgentLoginFormHandler.login", " "));
+			map.add(new BasicNameValuePair("_DARGS", "/agent-front/jsp/agent/login.jsp"));
+			httpPost.setEntity(new UrlEncodedFormEntity(map, "utf-8"));
+			CloseableHttpResponse response = instance.execute(httpPost);
+			String location = response.getFirstHeader("Location").getValue();
+			System.out.println(location);
+			response.close();
+
+			/********************************************************/
+			System.out.println("/********************************************************/");
+			/********************************************************/
+
+			httpPost = new HttpPost(location);
+			httpPost = setHeaders(httpPost);
+			response = instance.execute(httpPost);
+			location = response.getFirstHeader("Location").getValue();
+			System.out.println(location);
+			response.close();
+
+			/********************************************************/
+			System.out.println("/********************************************************/");
+			/********************************************************/
+
+			httpPost = new HttpPost(location);
+			httpPost = setHeaders(httpPost);
+			response = instance.execute(httpPost);
+			response.close();
+
+			/********************************************************/
+			System.out.println("/********************************************************/");
+			/********************************************************/
+
+			location = ATG_HOST + "/agent-front/jsp/store/searchStoreResults.jsp";
+			System.out.println(location);
+			httpPost = new HttpPost(location);
+			httpPost = setHeaders(httpPost);
+			response = instance.execute(httpPost);
+			map.clear();
+			map.add(new BasicNameValuePair("location", "0505"));
+			httpPost.setEntity(new UrlEncodedFormEntity(map, "utf-8"));
+			response = instance.execute(httpPost);
+			response.close();
+
+			// /********************************************************/
+			// System.out.println("/********************************************************/");
+			// /********************************************************/
+			//
+			// httpPost = new HttpPost(location);
+			// httpPost = setHeaders(httpPost);
+			// map.clear();
+			// map.add(new BasicNameValuePair("location", "0505"));
+			// httpPost.setEntity(new UrlEncodedFormEntity(map, "utf-8"));
+			// response = instance.execute(httpPost);
+			// location =
+			// "http://lnxs0506.uk.b-and-q.com:8030/agent-front/jsp/agent/main.jsp?";
+			// System.out.println(location);
+			// response.close();
+
+			/********************************************************/
+			System.out.println("/********************************************************/");
+			/********************************************************/
+
+			location = ATG_HOST + "/agent-front/jsp/agent/main.jsp?";
+			System.out.println(location);
+			httpPost = new HttpPost(location);
+			httpPost = setHeaders(httpPost);
+			response = instance.execute(httpPost);
+			response.close();
+
+			/********************************************************/
+			System.out.println("/********************************************************/");
+			/********************************************************/
+
+			location = ATG_HOST + "/agent-front/jsp/customer/order.jsp?orderId=" + omsOrderId;
 			System.out.println(location);
 			httpPost = new HttpPost(location);
 			httpPost = setHeaders(httpPost);
 			map.clear();
-			map.add(new BasicNameValuePair("productname", productName));
+			map.add(new BasicNameValuePair("orderNumber", sapOrderId));
+			httpPost.setEntity(new UrlEncodedFormEntity(map, "utf-8"));
+			response = instance.execute(httpPost);
+			System.out.println(EntityUtils.toString(response.getEntity()).contains("5014869104125"));
+			response.close();
+
+			/********************************************************/
+			System.out.println("/********************************************************/");
+			/********************************************************/
+
+			location = ATG_HOST + "/agent-front/jsp/orderAmend/cloneOrderJSON.jsp";
+			System.out.println(location);
+			httpPost = new HttpPost(location);
+			httpPost = setHeaders(httpPost);
+			map.clear();
 			map.add(new BasicNameValuePair("orderId", omsOrderId));
-			map.add(new BasicNameValuePair("lineno", Integer.toString(i + 1)));
-			map.add(new BasicNameValuePair("action", "check"));
-			map.add(new BasicNameValuePair("ean", ean));
-			map.add(new BasicNameValuePair("skuid", productId));
-			System.out.println(map);
+			map.add(new BasicNameValuePair("action", ""));
 			httpPost.setEntity(new UrlEncodedFormEntity(map, "utf-8"));
 			response = instance.execute(httpPost);
-			System.out.println(EntityUtils.toString(response.getEntity()).contains(
-					"{\"externalProduct\":\"false\",\"bespokeProduct\":\"false\",\"warrantyProduct\":\"false\"}"));
+			if (EntityUtils.toString(response.getEntity()).contains("INVALID_ORDER_IN_SAP")) {
+				response.close();
+				return "your order is not processed in SAP yet";
+			}
 			response.close();
 
 			/********************************************************/
 			System.out.println("/********************************************************/");
 			/********************************************************/
 
-			location = ATG_HOST + "/agent-front/jsp/orderAmend/cancelProduct.jsp";
+			location = ATG_HOST + "/agent-front/jsp/orderAmend/orderAmend.jsp";
 			System.out.println(location);
 			httpPost = new HttpPost(location);
 			httpPost = setHeaders(httpPost);
 			map.clear();
 			map.add(new BasicNameValuePair("orderId", omsOrderId));
-			map.add(new BasicNameValuePair("action", "check"));
-			map.add(new BasicNameValuePair("ean", ean));
-			map.add(new BasicNameValuePair("skuid", productId));
-			map.add(new BasicNameValuePair("productname", productName));
-			map.add(new BasicNameValuePair("lineno", Integer.toString(i + 1)));
-			System.out.println(map);
+			map.add(new BasicNameValuePair("action", ""));
 			httpPost.setEntity(new UrlEncodedFormEntity(map, "utf-8"));
 			response = instance.execute(httpPost);
-			System.out.println(EntityUtils.toString(response.getEntity()).contains("Reason for cancellation"));
+			System.out.println(EntityUtils.toString(response.getEntity()).contains("5014869104125"));
 			response.close();
 
 			/********************************************************/
 			System.out.println("/********************************************************/");
 			/********************************************************/
 
-			location = ATG_HOST + "/agent-front/jsp/orderAmend/orderAmendResult.jsp";
+			boolean eligibleArticleFound = false;
+			for (int i = 0; i < commerceItems.length; i++) {
+				List<String> commerceItemsProperties = getPropertyData(
+						"<print-item item-descriptor=\"commerceItem\" id=\"" + commerceItems[i] + "\"/>",
+						URL_ORDER_REPOSITORY);
+				String productId = getProperty(commerceItemsProperties, "productId");
+				System.out.println(productId);
+				String commerceItemState = getProperty(commerceItemsProperties, "state");
+				System.out.println(commerceItemState);
+				if (commerceItemState.equals("CANCELLED")) {
+					continue;
+				}
+				String shippingMethod = getProperty(commerceItemsProperties, "shippingMethod");
+				System.out.println(shippingMethod);
+				if (!shippingMethod.equals("homeDelivery")) {
+					continue;
+				}
+				eligibleArticleFound = true;
+				List<String> skuProperties = getPropertyData(
+						"<print-item item-descriptor=\"sku\" id=\"" + productId + "\"/>", URL_PRODUCT_CATALOG);
+				String productName = getProperty(skuProperties, "displayName").replaceAll("&amp;", "&");
+				System.out.println(productName);
+				String ean = getProperty(skuProperties, "ean");
+				System.out.println(ean);
+
+				location = ATG_HOST + "/agent-front/jsp/orderAmend/amendOrderJSON.jsp";
+				System.out.println(location);
+				httpPost = new HttpPost(location);
+				httpPost = setHeaders(httpPost);
+				map.clear();
+				map.add(new BasicNameValuePair("productname", productName));
+				map.add(new BasicNameValuePair("orderId", omsOrderId));
+				map.add(new BasicNameValuePair("lineno", Integer.toString(i + 1)));
+				map.add(new BasicNameValuePair("action", "check"));
+				map.add(new BasicNameValuePair("ean", ean));
+				map.add(new BasicNameValuePair("skuid", productId));
+				System.out.println(map);
+				httpPost.setEntity(new UrlEncodedFormEntity(map, "utf-8"));
+				response = instance.execute(httpPost);
+				System.out.println(EntityUtils.toString(response.getEntity()).contains(
+						"{\"externalProduct\":\"false\",\"bespokeProduct\":\"false\",\"warrantyProduct\":\"false\"}"));
+				response.close();
+
+				/********************************************************/
+				System.out.println("/********************************************************/");
+				/********************************************************/
+
+				location = ATG_HOST + "/agent-front/jsp/orderAmend/cancelProduct.jsp";
+				System.out.println(location);
+				httpPost = new HttpPost(location);
+				httpPost = setHeaders(httpPost);
+				map.clear();
+				map.add(new BasicNameValuePair("orderId", omsOrderId));
+				map.add(new BasicNameValuePair("action", "check"));
+				map.add(new BasicNameValuePair("ean", ean));
+				map.add(new BasicNameValuePair("skuid", productId));
+				map.add(new BasicNameValuePair("productname", productName));
+				map.add(new BasicNameValuePair("lineno", Integer.toString(i + 1)));
+				System.out.println(map);
+				httpPost.setEntity(new UrlEncodedFormEntity(map, "utf-8"));
+				response = instance.execute(httpPost);
+				System.out.println(EntityUtils.toString(response.getEntity()).contains("Reason for cancellation"));
+				response.close();
+
+				/********************************************************/
+				System.out.println("/********************************************************/");
+				/********************************************************/
+
+				location = ATG_HOST + "/agent-front/jsp/orderAmend/orderAmendResult.jsp";
+				System.out.println(location);
+				httpPost = new HttpPost(location);
+				httpPost = setHeaders(httpPost);
+				map.clear();
+				map.add(new BasicNameValuePair("reason", "Z2"));
+				map.add(new BasicNameValuePair("notes", "As requested by user"));
+				map.add(new BasicNameValuePair("lineIds", Integer.toString(i + 1)));
+				map.add(new BasicNameValuePair("action", "cancelLineItem"));
+				System.out.println(map);
+				httpPost.setEntity(new UrlEncodedFormEntity(map, "utf-8"));
+				response = instance.execute(httpPost);
+				response.close();
+
+				/********************************************************/
+				System.out.println("/********************************************************/");
+				/********************************************************/
+			}
+
+			if (!eligibleArticleFound) {
+				return "no cancellable article found in your order";
+			}
+
+			location = ATG_HOST + "/agent-front/jsp/checkout/actionControllerJson.jsp";
 			System.out.println(location);
 			httpPost = new HttpPost(location);
 			httpPost = setHeaders(httpPost);
 			map.clear();
-			map.add(new BasicNameValuePair("reason", "Z2"));
-			map.add(new BasicNameValuePair("notes", "As requested by user"));
-			map.add(new BasicNameValuePair("lineIds", Integer.toString(i + 1)));
-			map.add(new BasicNameValuePair("action", "cancelLineItem"));
-			System.out.println(map);
+			map.add(new BasicNameValuePair("action", "proceedToCheckout"));
 			httpPost.setEntity(new UrlEncodedFormEntity(map, "utf-8"));
 			response = instance.execute(httpPost);
 			response.close();
@@ -276,66 +300,55 @@ public class Try {
 			/********************************************************/
 			System.out.println("/********************************************************/");
 			/********************************************************/
+
+			location = ATG_HOST + "/agent-front/jsp/customer/landing.jsp";
+			System.out.println(location);
+			httpPost = new HttpPost(location);
+			httpPost = setHeaders(httpPost);
+			map.clear();
+			map.add(new BasicNameValuePair("accounttype", "BQ"));
+			map.add(new BasicNameValuePair("isatg", "1"));
+			map.add(new BasicNameValuePair("accountnumber", agentAccountNumber));
+			httpPost.setEntity(new UrlEncodedFormEntity(map, "utf-8"));
+			response = instance.execute(httpPost);
+			response.close();
+
+			/********************************************************/
+			System.out.println("/********************************************************/");
+			/********************************************************/
+
+			location = ATG_HOST + "/agent-front/jsp/checkout/stdCheckoutdetails.jsp";
+			System.out.println(location);
+			httpPost = new HttpPost(location);
+			httpPost = setHeaders(httpPost);
+			response = instance.execute(httpPost);
+			response.close();
+
+			/********************************************************/
+			System.out.println("/********************************************************/");
+			/********************************************************/
+
+			location = ATG_HOST + "/agent-front/jsp/checkout/include/newOrderConfirmation.jsp";
+			System.out.println(location);
+			httpPost = new HttpPost(location);
+			httpPost = setHeaders(httpPost);
+			map.clear();
+			map.add(new BasicNameValuePair("referenceNumber", ""));
+			map.add(new BasicNameValuePair("cvcNumber", ""));
+			map.add(new BasicNameValuePair("action", "payAndPlaceOrder"));
+			map.add(new BasicNameValuePair("visaProcurementCostCentre", ""));
+			map.add(new BasicNameValuePair("visaProcurementCostCentre", ""));
+			map.add(new BasicNameValuePair("orderId", "undefined"));
+			map.add(new BasicNameValuePair("isRefundOnReceipt", "undefined"));
+			httpPost.setEntity(new UrlEncodedFormEntity(map, "utf-8"));
+			response = instance.execute(httpPost);
+			System.out.println(EntityUtils.toString(response.getEntity()).contains("\"orderSubmitStatus\":true"));
+			response.close();
+			return null;
+		} catch (Exception e) {
+			e.printStackTrace();
+			return "a technical problem occured. please disconnect and try again";
 		}
-
-		location = ATG_HOST + "/agent-front/jsp/checkout/actionControllerJson.jsp";
-		System.out.println(location);
-		httpPost = new HttpPost(location);
-		httpPost = setHeaders(httpPost);
-		map.clear();
-		map.add(new BasicNameValuePair("action", "proceedToCheckout"));
-		httpPost.setEntity(new UrlEncodedFormEntity(map, "utf-8"));
-		response = instance.execute(httpPost);
-		response.close();
-
-		/********************************************************/
-		System.out.println("/********************************************************/");
-		/********************************************************/
-
-		location = ATG_HOST + "/agent-front/jsp/customer/landing.jsp";
-		System.out.println(location);
-		httpPost = new HttpPost(location);
-		httpPost = setHeaders(httpPost);
-		map.clear();
-		map.add(new BasicNameValuePair("accounttype", "BQ"));
-		map.add(new BasicNameValuePair("isatg", "1"));
-		map.add(new BasicNameValuePair("accountnumber", "52910049"));
-		httpPost.setEntity(new UrlEncodedFormEntity(map, "utf-8"));
-		response = instance.execute(httpPost);
-		response.close();
-
-		/********************************************************/
-		System.out.println("/********************************************************/");
-		/********************************************************/
-
-		location = ATG_HOST + "/agent-front/jsp/checkout/stdCheckoutdetails.jsp";
-		System.out.println(location);
-		httpPost = new HttpPost(location);
-		httpPost = setHeaders(httpPost);
-		response = instance.execute(httpPost);
-		response.close();
-
-		/********************************************************/
-		System.out.println("/********************************************************/");
-		/********************************************************/
-
-		location = ATG_HOST + "/agent-front/jsp/checkout/include/newOrderConfirmation.jsp";
-		System.out.println(location);
-		httpPost = new HttpPost(location);
-		httpPost = setHeaders(httpPost);
-		map.clear();
-		map.add(new BasicNameValuePair("referenceNumber", ""));
-		map.add(new BasicNameValuePair("cvcNumber", ""));
-		map.add(new BasicNameValuePair("action", "payAndPlaceOrder"));
-		map.add(new BasicNameValuePair("visaProcurementCostCentre", ""));
-		map.add(new BasicNameValuePair("visaProcurementCostCentre", ""));
-		map.add(new BasicNameValuePair("orderId", "undefined"));
-		map.add(new BasicNameValuePair("isRefundOnReceipt", "undefined"));
-		httpPost.setEntity(new UrlEncodedFormEntity(map, "utf-8"));
-		response = instance.execute(httpPost);
-		System.out.println(EntityUtils.toString(response.getEntity()).contains("\"orderSubmitStatus\":true"));
-		response.close();
-		return null;
 	}
 
 	private static HttpPost setHeaders(HttpPost httpPost) {
