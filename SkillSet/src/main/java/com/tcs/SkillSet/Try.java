@@ -17,26 +17,75 @@ import org.apache.http.impl.client.HttpClients;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
 
+import com.tcs.SkillSet.model.OrderStatus;
+import com.tcs.SkillSet.model.RelOrderCustomer;
+
 public class Try {
 	private static final String ATG_HOST = "http://atg-sqa3-fdc-app01.uk.b-and-q.com:8030";
 	private static final String URL_ORDER_REPOSITORY = ATG_HOST
 			+ "/dyn/admin/nucleus//atg/commerce/order/OrderRepository/";
 	private static final String URL_PRODUCT_CATALOG = ATG_HOST
 			+ "/dyn/admin/nucleus//atg/registry/ContentRepositories/ProductCatalog/";
+	private static final String URL_PROFILE_REPOSITORY = ATG_HOST
+			+ "/dyn/admin/nucleus//atg/userprofiling/ProfileAdapterRepository/";
 	private static final String URL_AGENT_LOGIN = ATG_HOST
 			+ "/agent-front/jsp/agent/login.jsp?_DARGS=/agent-front/jsp/agent/login.jsp";
 	private static final String agentAccountNumber = "52910049";
 
-	public static String cancelOrder(String sapOrderId) {
+	public static OrderStatus orderStatus(String orderNumber) {
+		try {
+			List<String> orderProperties = getPropertyData(
+					"<query-items item-descriptor=\"order\">sapOrderId=\"" + orderNumber + "\"</query-items>",
+					URL_ORDER_REPOSITORY);
+			if (orderProperties == null)
+				return new OrderStatus(orderNumber, "", "", "", "false", "we could not find your order");
+			String state = getProperty(orderProperties, "state");
+			switch (state) {
+			case "SENT_TO_OMS":
+				state = "just submitted";
+				break;
+			case "CREATED_IN_OMS":
+				state = "sales order notification sent in ATG";
+				break;
+			case "PROCESSING":
+				state = "Shipment processing started";
+				break;
+			case "DISPATCHED":
+				state = "ready for shipment";
+				break;
+			case "DELIVERED":
+				state = "order shiped";
+				break;
+			case "REMOVED":
+				state = "cancelled";
+				break;
+			}
+			String creationDate = getProperty(orderProperties, "creationDate");
+			String totalToPay = getProperty(orderProperties, "totalToPay");
+			return new OrderStatus(orderNumber, state, creationDate, totalToPay, "true", "");
+		} catch (Exception e) {
+			e.printStackTrace();
+			return new OrderStatus(orderNumber, "", "", "", "false",
+					"a technical problem occured. please disconnect and try again");
+		}
+	}
+
+	public static String orderCancel(String orderNumber) {
 		try {
 			CookieHandler.setDefault(new CookieManager());
 			CloseableHttpClient instance = HttpClients.createDefault();
 
 			List<String> orderProperties = getPropertyData(
-					"<query-items item-descriptor=\"order\">sapOrderId=\"" + sapOrderId + "\"</query-items>",
+					"<query-items item-descriptor=\"order\">sapOrderId=\"" + orderNumber + "\"</query-items>",
 					URL_ORDER_REPOSITORY);
+			if (orderProperties == null)
+				return "we could not find your order";
 			String omsOrderId = getProperty(orderProperties, "omsOrderId");
 			System.out.println("OrderID:" + omsOrderId);
+			String orderState = getProperty(orderProperties, "state");
+			System.out.println("state:" + orderState);
+			if (orderState.equals("REMOVED"))
+				return "your order is already cancelled";
 			String commerceItems[] = getProperty(orderProperties, "commerceItems").split(",");
 			System.out.println("commerceItems:" + getProperty(orderProperties, "commerceItems"));
 			HttpPost httpPost = new HttpPost(URL_AGENT_LOGIN);
@@ -151,10 +200,9 @@ public class Try {
 			httpPost = new HttpPost(location);
 			httpPost = setHeaders(httpPost);
 			map.clear();
-			map.add(new BasicNameValuePair("orderNumber", sapOrderId));
+			map.add(new BasicNameValuePair("orderNumber", orderNumber));
 			httpPost.setEntity(new UrlEncodedFormEntity(map, "utf-8"));
 			response = instance.execute(httpPost);
-			System.out.println(EntityUtils.toString(response.getEntity()).contains("5014869104125"));
 			response.close();
 
 			/********************************************************/
@@ -189,7 +237,6 @@ public class Try {
 			map.add(new BasicNameValuePair("action", ""));
 			httpPost.setEntity(new UrlEncodedFormEntity(map, "utf-8"));
 			response = instance.execute(httpPost);
-			System.out.println(EntityUtils.toString(response.getEntity()).contains("5014869104125"));
 			response.close();
 
 			/********************************************************/
@@ -201,6 +248,8 @@ public class Try {
 				List<String> commerceItemsProperties = getPropertyData(
 						"<print-item item-descriptor=\"commerceItem\" id=\"" + commerceItems[i] + "\"/>",
 						URL_ORDER_REPOSITORY);
+				if (commerceItemsProperties == null)
+					return "we could not find product information in your order";
 				String productId = getProperty(commerceItemsProperties, "productId");
 				System.out.println(productId);
 				String commerceItemState = getProperty(commerceItemsProperties, "state");
@@ -216,6 +265,8 @@ public class Try {
 				eligibleArticleFound = true;
 				List<String> skuProperties = getPropertyData(
 						"<print-item item-descriptor=\"sku\" id=\"" + productId + "\"/>", URL_PRODUCT_CATALOG);
+				if (skuProperties == null)
+					return "we could not find product information in your order";
 				String productName = getProperty(skuProperties, "displayName").replaceAll("&amp;", "&");
 				System.out.println(productName);
 				String ean = getProperty(skuProperties, "ean");
@@ -342,7 +393,10 @@ public class Try {
 			map.add(new BasicNameValuePair("isRefundOnReceipt", "undefined"));
 			httpPost.setEntity(new UrlEncodedFormEntity(map, "utf-8"));
 			response = instance.execute(httpPost);
-			System.out.println(EntityUtils.toString(response.getEntity()).contains("\"orderSubmitStatus\":true"));
+			boolean orderSubmitStatus = EntityUtils.toString(response.getEntity()).contains("\"orderSubmitStatus\":true");
+			System.out.println(orderSubmitStatus);
+			if (!orderSubmitStatus)
+				return "a technical problem occured. please disconnect and try again";
 			response.close();
 			return null;
 		} catch (Exception e) {
@@ -376,6 +430,8 @@ public class Try {
 		httpPost.setEntity(new UrlEncodedFormEntity(map, "utf-8"));
 		CloseableHttpResponse response = instance.execute(httpPost);
 		String body = EntityUtils.toString(response.getEntity());
+		if (body.contains("No items returned by this query") || body.contains("Can't find item with"))
+			return null;
 		List<String> lines = Arrays.asList(body.split("\r\n"));
 		for (String line : lines) {
 			if (line.startsWith("Query: "))
@@ -403,13 +459,37 @@ public class Try {
 
 	public static void main(String args[]) throws ClientProtocolException, IOException {
 		long startTime = System.nanoTime();
-		cancelOrder("1000020247");
+		orderCancel("1000020247");
 
 		long endTime = System.nanoTime();
 		long timeElapsed = endTime - startTime;
 
 		System.out.println("Execution time in nanoseconds: " + timeElapsed);
 		System.out.println("Execution time in milliseconds: " + timeElapsed / 1000000);
+	}
+
+	public static RelOrderCustomer relOrderCustomer(String orderNumber, String customerID) {
+		try {
+			List<String> orderProperties = getPropertyData(
+					"<query-items item-descriptor=\"order\">sapOrderId=\"" + orderNumber + "\"</query-items>",
+					URL_ORDER_REPOSITORY);
+			if (orderProperties == null)
+				return new RelOrderCustomer(orderNumber, customerID, "false", "true", "");
+			String profileID = getProperty(orderProperties, "profileId");
+			List<String> userProperties = getPropertyData(
+					"<query-items item-descriptor=\"user\">id=\"" + profileID + "\"</query-items>",
+					URL_PROFILE_REPOSITORY);
+			if (userProperties == null)
+				return new RelOrderCustomer(orderNumber, customerID, "false", "true", "");
+			String externalId = getProperty(userProperties, "externalId");
+			if (externalId.equals(customerID))
+				return new RelOrderCustomer(orderNumber, customerID, "true", "true", "");
+			return new RelOrderCustomer(orderNumber, customerID, "false", "true", "");
+		} catch (Exception e) {
+			e.printStackTrace();
+			return new RelOrderCustomer(orderNumber, customerID, "", "false",
+					"a technical problem occured. please disconnect and try again");
+		}
 	}
 
 }
