@@ -8,9 +8,9 @@ public class RelOrderCustomer {
 	@JsonProperty("order.orderNumber.type")
 	String orderNumberType;
 
-	@JsonProperty("order.customerID")
+	@JsonProperty("customer.customerID")
 	String customerID;
-	@JsonProperty("order.customerID.type")
+	@JsonProperty("customer.customerID.type")
 	String customerIDType;
 
 	@JsonProperty("rel.order.orderNumber.customer.customerID")
@@ -18,21 +18,21 @@ public class RelOrderCustomer {
 	@JsonProperty("rel.order.orderNumber.customer.customerID.type")
 	String relationType;
 
-	@JsonProperty("orderCancel.success")
+	@JsonProperty("relOrderCustomer.success")
 	String success;
-	@JsonProperty("orderCancel.success.type")
+	@JsonProperty("relOrderCustomer.success.type")
 	String successType;
 
-	@JsonProperty("orderCancel.failureReason")
+	@JsonProperty("relOrderCustomer.failureReason")
 	String failureReason;
-	@JsonProperty("orderCancel.failureReason.type")
+	@JsonProperty("relOrderCustomer.failureReason.type")
 	String failureReasonType;
 
 	public RelOrderCustomer(String orderNumber, String customerID, String relation, String success,
 			String failureReason) {
 		super();
 		this.orderNumber = orderNumber;
-		this.orderNumberType = "order";
+		this.orderNumberType = "number";
 		this.customerID = customerID;
 		this.customerIDType = "number";
 		this.relation = relation;
