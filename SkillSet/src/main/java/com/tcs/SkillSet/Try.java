@@ -17,6 +17,7 @@ import org.apache.http.impl.client.HttpClients;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
 
+import com.tcs.SkillSet.model.OrderCancel;
 import com.tcs.SkillSet.model.OrderStatus;
 import com.tcs.SkillSet.model.RelOrderCustomer;
 
@@ -70,7 +71,7 @@ public class Try {
 		}
 	}
 
-	public static String orderCancel(String orderNumber) {
+	public static OrderCancel orderCancel(String orderNumber) {
 		try {
 			CookieHandler.setDefault(new CookieManager());
 			CloseableHttpClient instance = HttpClients.createDefault();
@@ -79,13 +80,13 @@ public class Try {
 					"<query-items item-descriptor=\"order\">sapOrderId=\"" + orderNumber + "\"</query-items>",
 					URL_ORDER_REPOSITORY);
 			if (orderProperties == null)
-				return "we could not find your order";
+				return new OrderCancel(orderNumber, "false", "we could not find your order", "true", "");
 			String omsOrderId = getProperty(orderProperties, "omsOrderId");
 			System.out.println("OrderID:" + omsOrderId);
 			String orderState = getProperty(orderProperties, "state");
 			System.out.println("state:" + orderState);
 			if (orderState.equals("REMOVED"))
-				return "your order is already cancelled";
+				return new OrderCancel(orderNumber, "false", "your order is already cancelled", "true", "");
 			String commerceItems[] = getProperty(orderProperties, "commerceItems").split(",");
 			System.out.println("commerceItems:" + getProperty(orderProperties, "commerceItems"));
 			HttpPost httpPost = new HttpPost(URL_AGENT_LOGIN);
@@ -220,7 +221,7 @@ public class Try {
 			response = instance.execute(httpPost);
 			if (EntityUtils.toString(response.getEntity()).contains("INVALID_ORDER_IN_SAP")) {
 				response.close();
-				return "your order is not processed in SAP yet";
+				return new OrderCancel(orderNumber, "false", "your order is not processed in SAP yet", "true", "");
 			}
 			response.close();
 
@@ -249,7 +250,8 @@ public class Try {
 						"<print-item item-descriptor=\"commerceItem\" id=\"" + commerceItems[i] + "\"/>",
 						URL_ORDER_REPOSITORY);
 				if (commerceItemsProperties == null)
-					return "we could not find product information in your order";
+					return new OrderCancel(orderNumber, "false", "we could not find product information in your order", "true",
+							"");
 				String productId = getProperty(commerceItemsProperties, "productId");
 				System.out.println(productId);
 				String commerceItemState = getProperty(commerceItemsProperties, "state");
@@ -266,7 +268,8 @@ public class Try {
 				List<String> skuProperties = getPropertyData(
 						"<print-item item-descriptor=\"sku\" id=\"" + productId + "\"/>", URL_PRODUCT_CATALOG);
 				if (skuProperties == null)
-					return "we could not find product information in your order";
+					return new OrderCancel(orderNumber, "false", "we could not find product information in your order", "true",
+							"");
 				String productName = getProperty(skuProperties, "displayName").replaceAll("&amp;", "&");
 				System.out.println(productName);
 				String ean = getProperty(skuProperties, "ean");
@@ -335,7 +338,7 @@ public class Try {
 			}
 
 			if (!eligibleArticleFound) {
-				return "no cancellable article found in your order";
+				return new OrderCancel(orderNumber, "false", "no cancellable article found in your order", "true", "");
 			}
 
 			location = ATG_HOST + "/agent-front/jsp/checkout/actionControllerJson.jsp";
@@ -393,15 +396,18 @@ public class Try {
 			map.add(new BasicNameValuePair("isRefundOnReceipt", "undefined"));
 			httpPost.setEntity(new UrlEncodedFormEntity(map, "utf-8"));
 			response = instance.execute(httpPost);
-			boolean orderSubmitStatus = EntityUtils.toString(response.getEntity()).contains("\"orderSubmitStatus\":true");
+			boolean orderSubmitStatus = EntityUtils.toString(response.getEntity())
+					.contains("\"orderSubmitStatus\":true");
 			System.out.println(orderSubmitStatus);
 			if (!orderSubmitStatus)
-				return "a technical problem occured. please disconnect and try again";
+				return new OrderCancel(orderNumber, "", "", "false",
+						"a technical problem occured. please disconnect and try again");
 			response.close();
-			return null;
+			return new OrderCancel(orderNumber, "true", "", "true", "");
 		} catch (Exception e) {
 			e.printStackTrace();
-			return "a technical problem occured. please disconnect and try again";
+			return new OrderCancel(orderNumber, "", "", "false",
+					"a technical problem occured. please disconnect and try again");
 		}
 	}
 

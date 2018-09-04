@@ -23,10 +23,7 @@ public class SkillSetApplication {
 	@RequestMapping(value = "/orderCancel/{orderNumber}", method = RequestMethod.GET, produces = { "application/json" })
 	@ResponseBody
 	public OrderCancel orderCancel(@PathVariable("orderNumber") String orderNumber) {
-		String result = Try.orderCancel(orderNumber);
-		if (result == null)
-			return new OrderCancel(orderNumber, "true", "");
-		return new OrderCancel(orderNumber, "false", result);
+		return Try.orderCancel(orderNumber);
 	}
 
 	@RequestMapping(value = "/orderStatus/{orderNumber}", method = RequestMethod.GET, produces = { "application/json" })
