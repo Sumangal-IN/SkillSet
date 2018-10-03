@@ -43,19 +43,19 @@ public class Try {
 			String state = getProperty(orderProperties, "state");
 			switch (state) {
 			case "SENT_TO_OMS":
-				state = "just submitted";
+				state = "under processing and not yet dispatched";
 				break;
 			case "CREATED_IN_OMS":
-				state = "sales order notification sent in ATG";
+				state = "under processing and not yet dispatched";
 				break;
 			case "PROCESSING":
-				state = "Shipment processing started";
+				state = "shipment processing started";
 				break;
 			case "DISPATCHED":
 				state = "ready for shipment";
 				break;
 			case "DELIVERED":
-				state = "order shiped";
+				state = "delivered";
 				break;
 			case "REMOVED":
 				state = "cancelled";
